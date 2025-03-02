@@ -1,4 +1,6 @@
-﻿open System
+(*Получить список из минимальных цифр натуральных чисел, содержащихся в
+исходном списке*)
+open System
 
 let rec check() =
     let input = Console.ReadLine()
