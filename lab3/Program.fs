@@ -20,9 +20,8 @@ let rec fmin n cmin =
         if d < cmin then fmin (n / 10) d
         else fmin (n / 10) cmin
 let minDigit n = fmin n 9
-let n = p.Value
 let x = seq { 
-    for i in 1 .. n do
+    for i in 1 .. p.Value do
         printf "Введите элемент %d: " i
         yield check() 
 }
