@@ -1,4 +1,4 @@
-﻿(*Найти количество элементов последовательности, в которых встречается заданная цифра.*)
+(*Найти количество элементов последовательности, в которых встречается заданная цифра.*)
 open System
 let rec check() =
     let input = Console.ReadLine()
@@ -14,25 +14,20 @@ let rec checkD() =
     | _ ->
         printfn "Вы ввели не цифру. Попробуйте еще раз:"
         checkD()
-let p = lazy (
-    printf "Введите цифру: ";
-    let x = checkD();
-    x;
-)
+printf "Введите цифру: ";
+let x = checkD();
 let p1 = lazy (
     printf "Введите кол-во элементов: ";
     let n = check();
     n;
 )
-let x = p.Value
-let n = p1.Value
 let rec containsDigit d num =
     if num = 0 then false
     else
         if num % 10 = d then true
         else containsDigit d (num / 10)
 let sequence = seq {
-    for i in 1 .. n do
+    for i in 1 .. p1.Value do
         printf "Введите элемент %d: " i
         yield check()
 }
