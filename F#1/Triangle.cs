@@ -6,14 +6,14 @@ public class Triangle : ThreeNumbers
     /// <summary>
     /// Конструктор по умолчанию, инициализирует стороны нулями.
     /// </summary>
-    public Triangle() : base() { }
+    private Triangle() : base() { }
     /// <summary>
     /// Конструктор с параметрами для инициализации сторон треугольника.
     /// </summary>
     /// <param name="a">Первая сторона.</param>
     /// <param name="b">Вторая сторона.</param>
     /// <param name="c">Третья сторона.</param>
-    public Triangle(int a, int b, int c) : base(a, b, c)
+    private Triangle(int a, int b, int c) : base(a, b, c)
     {
         if (a <= 0 || b <= 0 || c <= 0)
         {
