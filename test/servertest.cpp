@@ -7,6 +7,8 @@
 #define PORT 1234
 #define BUFFER_SIZE 1024
 
+using namespace std;
+
 int main() {
     int server_fd, new_socket;
     struct sockaddr_in address;
@@ -32,18 +34,18 @@ int main() {
         perror("listen");
         exit(EXIT_FAILURE);
     }
-    std::cout << "Server listening on port " << PORT << std::endl;
+    cout << "Server listening on port " << PORT << endl;
     while (true) {
         if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen)) < 0) {
             perror("accept");
             exit(EXIT_FAILURE);
         }
-        std::cout << "New connection from " << inet_ntoa(address.sin_addr) << std::endl;
+        cout << "New connection from " << inet_ntoa(address.sin_addr) << endl;
         int valread = read(new_socket, buffer, BUFFER_SIZE);
-        std::cout << "Received: " << buffer << std::endl;
+        cout << "Received: " << buffer << endl;
         const char* response = "Data received";
         send(new_socket, response, strlen(response), 0);
-        std::cout << "Response sent\n";
+        cout << "Response sent\n";
         close(new_socket);
     }
     return 0;
