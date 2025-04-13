@@ -2,22 +2,28 @@ using System.Collections;
 using System.Text;
 namespace lab2;
 
-public class filesandcollection
+public class FilesAndCollection
 {
     private List<string> list;
+    private  LinkedList<string> list1;
     private HashSet<string> allMovies;
     private List<HashSet<string>> viewers;
-    private string filePath;
-    public filesandcollection(HashSet<string> allMovies, List<HashSet<string>> viewers)
+    private readonly string filePath;
+    public FilesAndCollection(HashSet<string> allMovies, List<HashSet<string>> viewers)
     {
         this.allMovies = allMovies;
         this.viewers = viewers;
     }
-    public filesandcollection(string filePath)
+    
+    public FilesAndCollection(LinkedList<string> inputList)
+    {
+        this.list1 = inputList;
+    }
+    public FilesAndCollection(string filePath)
     {
         this.filePath = filePath;
     }
-    public filesandcollection(List<string> inputList)
+    public FilesAndCollection(List<string> inputList)
     {
         this.list = inputList;
     }
@@ -178,35 +184,46 @@ public class filesandcollection
             }
         }
     }
-    public void ReverseBetweenFirstAndLast(string element)
+    public void ReverseBetweenFirstAndLast(string value)
     {
-        int firstIndex = -1;
-        int lastIndex = -1;
-        for (int i = 0; i < list.Count; i++)
+        LinkedListNode<string> firstNode = null;
+        LinkedListNode<string> lastNode = null;
+        var currentNode = list1.First;
+        while (currentNode != null)
         {
-            if (list[i].ToString() == element)
+            if (currentNode.Value == value)
             {
-                if (firstIndex == -1)
-                    firstIndex = i;
-                lastIndex = i;
+                if (firstNode == null)
+                    firstNode = currentNode;
+                lastNode = currentNode;
+            }
+            currentNode = currentNode.Next;
+        }
+        if (firstNode != null && lastNode != null && firstNode != lastNode)
+        {
+            var nodesToReverse = new List<string>();
+            currentNode = firstNode.Next;
+            while (currentNode != null && currentNode != lastNode)
+            {
+                nodesToReverse.Add(currentNode.Value);
+                currentNode = currentNode.Next;
+            }
+            currentNode = firstNode.Next;
+            while (currentNode != null && currentNode != lastNode)
+            {
+                var nextNode = currentNode.Next;
+                list1.Remove(currentNode);
+                currentNode = nextNode;
+            }
+            currentNode = firstNode;
+            for (int i = nodesToReverse.Count - 1; i >= 0; i--)
+            {
+                list1.AddAfter(currentNode, nodesToReverse[i]);
+                currentNode = currentNode.Next;
             }
         }
-        if (firstIndex == lastIndex)
-        {
-            Console.WriteLine($"Элемент '{element}' встречается меньше 2 раз. Изменений не сделано.");
-            return;
-        }
-        int left = firstIndex + 1;
-        int right = lastIndex - 1;
-        while (left < right)
-        {
-            string temp = list[left];
-            list[left] = list[right];
-            list[right] = temp;
-            left++;
-            right--;
-        }
     }
+
     public override string ToString()
     {
         if (list.Count == 0)
@@ -219,6 +236,26 @@ public class filesandcollection
             sb.Append($"{list[i]}, ");
         }
         sb.Append($"{list[i]}] ");
+        return sb.ToString();
+    }
+    public string PrintNewList()
+    {
+        if (list1 == null || list1.Count == 0)
+            return "Список пуст";
+    
+        var sb = new StringBuilder();
+        sb.Append("[");
+    
+        var currentNode = list1.First;
+        while (currentNode != null)
+        {
+            sb.Append(currentNode.Value);
+            currentNode = currentNode.Next;
+            if (currentNode != null)
+                sb.Append(", ");
+        }
+    
+        sb.Append("]");
         return sb.ToString();
     }
     public void AnalyzeMovies()
@@ -258,7 +295,7 @@ public class filesandcollection
         }
     }
     
-    public static void GenerateTextFileFOR9(string filePath)
+    public void GenerateTextFileFOR9()
     {
         Random random = new Random();
         char[] chars =
@@ -274,13 +311,12 @@ public class filesandcollection
                 char randomChar = chars[random.Next(chars.Length)];
                 f.Write(randomChar);
             }
-
             f.Write(" ");
         }
         f.Close();
     }
     
-    public void ProcessFile(string filePath)
+    public void ProcessFile()
     {
         string[] words = File.ReadAllText(filePath).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
         HashSet<char> allConsonants = new HashSet<char>();
@@ -316,18 +352,8 @@ public class filesandcollection
         while ((line = f.ReadLine()) != null)
         {
             string[] parts = line.Split(' ');
-            if (parts.Length < 3)
-            {
-                Console.WriteLine($"Ошибка в строке: {line}");
-                continue;
-            }
             string phone = parts[2];
             string[] phoneParts = phone.Split('-');
-            if (phoneParts.Length != 3 || phoneParts[2].Length != 2)
-            {
-                Console.WriteLine($"Неверный формат телефона: {phone}");
-                continue;
-            }
             string departmentKey = $"{phoneParts[0]}-{phoneParts[1]}";
             if (departmentCounts.ContainsKey(departmentKey))
                 departmentCounts[departmentKey]++;

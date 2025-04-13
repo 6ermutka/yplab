@@ -16,10 +16,10 @@ internal class Program
         Console.Write("count - ");
         int countfirst = checker.GetValidWholeNumber();
         Console.WriteLine("ГЕНЕРАЦИЯ ТЕКСТОВОГО ДОКУМЕНТА...");
-        filesandcollection.FillWithRandomNumbers(countfirst, minValue, maxValue, filepath);
+        FilesAndCollection.FillWithRandomNumbers(countfirst, minValue, maxValue, filepath);
         Console.Write("b - ");
         int b = checker.GetValidWholeNumber();
-        bool check = filesandcollection.ContainsNumber(b, filepath);
+        bool check = FilesAndCollection.ContainsNumber(b, filepath);
         Console.WriteLine($"Результат: {check}");
         
         Console.WriteLine("-----ЗАДАНИЕ 2:-----");
@@ -30,20 +30,20 @@ internal class Program
         Console.Write("count - ");
         int count2 = checker.GetValidWholeNumber();
         Console.WriteLine("ГЕНЕРАЦИЯ ТЕКСТОВОГО ДОКУМЕНТА...");
-        filesandcollection.FillWithRandomNumbersFull(count2, minValue2, maxValue2, filepath);
+        FilesAndCollection.FillWithRandomNumbersFull(count2, minValue2, maxValue2, filepath);
         Console.Write("k - ");
         int K = checker.GetValidWholeNumber(); 
-        int sum = filesandcollection.SumOfMultiples(filepath, K);
+        int sum = FilesAndCollection.SumOfMultiples(filepath, K);
         Console.WriteLine($"Реультат: {sum}");
         
         Console.WriteLine("-----ЗАДАНИЕ 3:-----");
         Console.WriteLine("ГЕНЕРАЦИЯ ТЕКСТОВОГО ДОКУМЕНТА...");
         Console.Write("count - ");
         int count3 = checker.GetValidWholeNumber();
-        filesandcollection.GenerateTextFile(count3, filepath);
+        FilesAndCollection.GenerateTextFile(count3, filepath);
         Console.Write("Filepathnew - ");
         string filepathnew = checker.GetValidFilePath();
-        filesandcollection.CopyLinesWithoutDigits(filepath, filepathnew);
+        FilesAndCollection.CopyLinesWithoutDigits(filepath, filepathnew);
         Console.WriteLine($"Результат: Строки переписаны в {filepathnew} ");
 
         Console.WriteLine("-----ЗАДАНИЕ 4:-----");
@@ -51,10 +51,10 @@ internal class Program
         Console.Write("count - ");
         int count4 = checker.GetValidWholeNumber();
         Console.WriteLine("ГЕНЕРАЦИЯ БИНАРНОГО ДОКУМЕНТА...");
-        filesandcollection.GenerateBinaryFile(filepathBIN, count4);
+        FilesAndCollection.GenerateBinaryFile(filepathBIN, count4);
         Console.Write("Filepathnew - ");
         string filepathnew2 = checker.GetValidFilePath();
-        filesandcollection.GenerateUniqueBinaryFile(filepath, filepathnew2, count4);
+        FilesAndCollection.GenerateUniqueBinaryFile(filepathBIN, filepathnew2, count4);
         Console.WriteLine($"Результат: Числа переписаны в {filepathnew2} ");
 
         Console.WriteLine("-----ЗАДАНИЕ 6:-----");
@@ -67,7 +67,7 @@ internal class Program
                 break;
             userList.Add(input);
         }
-        filesandcollection list = new filesandcollection(userList);
+        FilesAndCollection list = new FilesAndCollection(userList);
         Console.WriteLine("Введенный список:");
         Console.WriteLine(list.ToString());
         Console.Write("Введите значение для удаления: ");
@@ -77,23 +77,23 @@ internal class Program
         Console.WriteLine(list.ToString());
 
         Console.WriteLine("-----ЗАДАНИЕ 7:-----");
-        List<string> userList2 = new List<string>();
+        LinkedList<string> userList2 = new LinkedList<string>();
         Console.WriteLine("Введите элементы списка (для завершения введите пустую строку):");
         while (true)
         {
             string input = Console.ReadLine();
             if (string.IsNullOrEmpty(input))
                 break;
-            userList2.Add(input);
+            userList2.AddLast(input);
         }
-        filesandcollection list2 = new filesandcollection(userList2);
+        FilesAndCollection list2 = new FilesAndCollection(userList2);
         Console.WriteLine("Введенный список:");
-        Console.WriteLine(list2.ToString());
+        Console.WriteLine(list2.PrintNewList());
         Console.Write("Введите элемент E: ");
         string E = Console.ReadLine();
         list2.ReverseBetweenFirstAndLast(E);
         Console.WriteLine("После обработки:");
-        Console.WriteLine(list2.ToString());
+        Console.WriteLine(list2.PrintNewList());
 
         Console.WriteLine("-----ЗАДАНИЕ 8:-----");
         Console.Write("Количество фильмов - ");
@@ -126,14 +126,14 @@ internal class Program
             }
             viewers.Add(viewerMovies);
         }
-        filesandcollection analyzer = new filesandcollection(allMovies, viewers);
+        FilesAndCollection analyzer = new FilesAndCollection(allMovies, viewers);
         analyzer.AnalyzeMovies();
 
         Console.WriteLine("-----ЗАДАНИЕ 9:-----");
         Console.WriteLine("ГЕНЕРАЦИЯ ТЕКСТОВОГО ДОКУМЕНТА...");
-        filesandcollection.GenerateTextFileFOR9(filepath);
-        filesandcollection files = new filesandcollection(filepath);
-        files.ProcessFile(filepath);
+        FilesAndCollection files = new FilesAndCollection(filepath);
+        files.GenerateTextFileFOR9();
+        files.ProcessFile();
 
         Console.WriteLine("-----ЗАДАНИЕ 10:-----");
         Console.Write("Количество сотрудников - ");
@@ -152,12 +152,12 @@ internal class Program
         }
         Console.WriteLine($"Данные успешно сохранены в файл {filepath}");
         f.Close();
-        filesandcollection k = new filesandcollection(filepath);
+        FilesAndCollection k = new FilesAndCollection(filepath);
         double N = k.CalculateAverageEmployeesPerDepartment();
         Console.WriteLine(N);
     }
 }
 ///Users/stepanivanov/Documents/project/test/test.txt
-///Users/stepanivanov/Documents/project/test/test.txt1
-///
+///Users/stepanivanov/Documents/project/test/test1.txt
+
 
