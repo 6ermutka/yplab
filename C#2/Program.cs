@@ -1,6 +1,47 @@
 ﻿// See https://aka.ms/new-console-template for more information
-using System.Collections;
 using lab2;
+
+namespace lab2
+{
+    public struct Toy
+    {
+        private string name;
+        private double cost;
+        private int age1;
+        private int age2;
+        public string Name
+        {
+            get { return name; }
+            set { name = value; }
+        }
+        public double Cost
+        {
+            get { return cost; }
+            set { cost = value; }
+        }
+        public int Age1
+        {
+            get { return age1; }
+            set { age1 = value; }
+        }
+        public int Age2
+        {
+            get { return age2; }
+            set { age2 = value; }
+        }
+        public Toy(string name, double cost, int ageFrom, int ageTo)
+        {
+            this.name = name;
+            this.cost = cost;
+            this.age1 = ageFrom;
+            this.age2 = ageTo;
+        }
+        public string Print()
+        {
+            return $"{Name} (Цена: {Cost} руб., Возраст: {age1}-{age2} лет)";
+        }
+    }
+}
 
 internal class Program
 {
@@ -8,7 +49,7 @@ internal class Program
     {
         Console.WriteLine("-----ЗАДАНИЕ 1:-----");
         InputValidator checker = new InputValidator();
-        string filepath = checker.GetValidFilePath();
+        /*string filepath = checker.GetValidFilePath();
         Console.Write("minValue - ");
         int minValue = checker.GetValidWholeNumber();
         Console.Write("maxValue - ");
@@ -55,9 +96,47 @@ internal class Program
         Console.Write("Filepathnew - ");
         string filepathnew2 = checker.GetValidFilePath();
         FilesAndCollection.GenerateUniqueBinaryFile(filepathBIN, filepathnew2, count4);
-        Console.WriteLine($"Результат: Числа переписаны в {filepathnew2} ");
+        Console.WriteLine($"Результат: Числа переписаны в {filepathnew2} ");*/
+        
+        Console.WriteLine("-----ЗАДАНИЕ 5:-----");
+        Toy[] toys = new Toy[]
+        {
+            new Toy("Конструктор", 1500, 5, 12),
+            new Toy("Мяч", 500, 3, 10),
+            new Toy("Кукла", 800, 2, 8),
+            new Toy("Пазл", 450, 4, 6),
+            new Toy("Машинка", 300, 2, 5),
+            new Toy("Набор доктора", 1200, 3, 7)
+        };
+        string filepathXML = checker.GetValidFilePath();
+        FilesAndCollection.Serialize(toys, filepathXML);
+        Console.WriteLine("Массив игрушек успешно сохранен в XML файл.");
+        Toy[] deserializedToys = FilesAndCollection.Deserialize(filepathXML);
+        // Выполняем задание: получаем игрушки для 5-летних детей с ценой <= k
+        Console.Write("Введите максимальную цену (k): ");
+        double k = double.Parse(Console.ReadLine());
+        List<string> suitableToys = new List<string>();
+        foreach (Toy toy in deserializedToys)
+        {
+            if (toy.Cost <= k && toy.Age1 <= 5 && toy.Age2 >= 5)
+            {
+                suitableToys.Add(toy.Name);
+            }
+        }
+        Console.WriteLine("\nПодходящие игрушки:");
+        if (suitableToys.Count > 0)
+        {
+            foreach (string toyName in suitableToys)
+            {
+                Console.WriteLine(toyName);
+            }
+        }
+        else
+        {
+            Console.WriteLine("Нет подходящих игрушек.");
+        }
 
-        Console.WriteLine("-----ЗАДАНИЕ 6:-----");
+        /*Console.WriteLine("-----ЗАДАНИЕ 6:-----");
         List<string> userList = new List<string>();
         Console.WriteLine("Введите элементы списка (для завершения введите пустую строку):");
         while (true)
@@ -67,14 +146,13 @@ internal class Program
                 break;
             userList.Add(input);
         }
-        FilesAndCollection list = new FilesAndCollection(userList);
         Console.WriteLine("Введенный список:");
-        Console.WriteLine(list.ToString());
+        Console.WriteLine(FilesAndCollection.PrintList(userList));
         Console.Write("Введите значение для удаления: ");
         string valueToRemove = Console.ReadLine();
-        list.RemoveAllOccurrences(valueToRemove);
+        FilesAndCollection.RemoveAllOccurrences(valueToRemove, userList);
         Console.WriteLine("После удаления:");
-        Console.WriteLine(list.ToString());
+        Console.WriteLine(FilesAndCollection.PrintList(userList));
 
         Console.WriteLine("-----ЗАДАНИЕ 7:-----");
         LinkedList<string> userList2 = new LinkedList<string>();
@@ -86,14 +164,13 @@ internal class Program
                 break;
             userList2.AddLast(input);
         }
-        FilesAndCollection list2 = new FilesAndCollection(userList2);
         Console.WriteLine("Введенный список:");
-        Console.WriteLine(list2.PrintNewList());
+        Console.WriteLine(FilesAndCollection.PrintNewList(userList2));
         Console.Write("Введите элемент E: ");
         string E = Console.ReadLine();
-        list2.ReverseBetweenFirstAndLast(E);
+        FilesAndCollection.ReverseBetweenFirstAndLast(E, userList2);
         Console.WriteLine("После обработки:");
-        Console.WriteLine(list2.PrintNewList());
+        Console.WriteLine(FilesAndCollection.PrintNewList(userList2));
 
         Console.WriteLine("-----ЗАДАНИЕ 8:-----");
         Console.Write("Количество фильмов - ");
@@ -120,20 +197,18 @@ internal class Program
                 string movie = Console.ReadLine();
                 if (!allMovies.Contains(movie))
                 {
-                    Console.WriteLine($"Ошибка: фильм '{movie}' не существует в общем списке. Пропускаем.");
+                    Console.WriteLine($"Ошибка: фильм '{movie}' не существует в общем списке.");
                 }
                 viewerMovies.Add(movie);
             }
             viewers.Add(viewerMovies);
         }
-        FilesAndCollection analyzer = new FilesAndCollection(allMovies, viewers);
-        analyzer.AnalyzeMovies();
+        FilesAndCollection.AnalyzeMovies(allMovies, viewers);
 
         Console.WriteLine("-----ЗАДАНИЕ 9:-----");
         Console.WriteLine("ГЕНЕРАЦИЯ ТЕКСТОВОГО ДОКУМЕНТА...");
-        FilesAndCollection files = new FilesAndCollection(filepath);
-        files.GenerateTextFileFOR9();
-        files.ProcessFile();
+        FilesAndCollection.GenerateTextFileFOR9(filepath);
+        FilesAndCollection.ProcessFile(filepath);
 
         Console.WriteLine("-----ЗАДАНИЕ 10:-----");
         Console.Write("Количество сотрудников - ");
@@ -152,9 +227,8 @@ internal class Program
         }
         Console.WriteLine($"Данные успешно сохранены в файл {filepath}");
         f.Close();
-        FilesAndCollection k = new FilesAndCollection(filepath);
-        double N = k.CalculateAverageEmployeesPerDepartment();
-        Console.WriteLine(N);
+        double N = FilesAndCollection.CalculateAverageEmployeesPerDepartment(filepath);
+        Console.WriteLine(N);*/
     }
 }
 ///Users/stepanivanov/Documents/project/test/test.txt

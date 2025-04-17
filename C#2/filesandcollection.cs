@@ -1,32 +1,9 @@
-using System.Collections;
 using System.Text;
+using System.Xml.Serialization;
 namespace lab2;
 
 public class FilesAndCollection
 {
-    private List<string> list;
-    private  LinkedList<string> list1;
-    private HashSet<string> allMovies;
-    private List<HashSet<string>> viewers;
-    private readonly string filePath;
-    public FilesAndCollection(HashSet<string> allMovies, List<HashSet<string>> viewers)
-    {
-        this.allMovies = allMovies;
-        this.viewers = viewers;
-    }
-    
-    public FilesAndCollection(LinkedList<string> inputList)
-    {
-        this.list1 = inputList;
-    }
-    public FilesAndCollection(string filePath)
-    {
-        this.filePath = filePath;
-    }
-    public FilesAndCollection(List<string> inputList)
-    {
-        this.list = inputList;
-    }
     public static void FillWithRandomNumbers(int count, int minValue, int maxValue, string filePath)
     {
         Random random = new Random();
@@ -36,7 +13,6 @@ public class FilesAndCollection
             int number = random.Next(minValue, maxValue + 1);
             f.WriteLine(number);
         }
-
         f.Close();
     }
     public static bool ContainsNumber(int number, string filePath)
@@ -49,7 +25,6 @@ public class FilesAndCollection
                 f.Close();
                 return true;
             }
-
         f.Close();
         return false;
     }
@@ -150,7 +125,10 @@ public class FilesAndCollection
         int[] uniqueNumbers = new int[numbersCount];
         int uniqueCount = 0;
         BinaryReader f = new BinaryReader(File.Open(sourceFilePath, FileMode.Open));
-        for (int i = 0; i < numbersCount; i++) allNumbers[i] = f.ReadInt32();
+        for (int i = 0; i < numbersCount; i++)
+        {
+            allNumbers[i] = f.ReadInt32();
+        }
         f.Close();
         for (int i = 0; i < numbersCount; i++)
         {
@@ -171,27 +149,35 @@ public class FilesAndCollection
             }
         }
         BinaryWriter f1 = new BinaryWriter(File.Open(destinationFilePath, FileMode.Create));
-        for (int i = 0; i < uniqueCount; i++) f1.Write(uniqueNumbers[i]);
+        for (int i = 0; i < uniqueCount; i++)
+        {
+            f1.Write(uniqueNumbers[i]);
+        }
         f1.Close();
     }
-    public void RemoveAllOccurrences(string value)
+    public static void RemoveAllOccurrences<T>(T value, List<T> list)
     {
         for (int i = list.Count - 1; i >= 0; i--)
         {
-            if (list[i] == value)
+            if (EqualityComparer<T>.Default.Equals(list[i], value))
             {
                 list.RemoveAt(i);
             }
         }
     }
-    public void ReverseBetweenFirstAndLast(string value)
+    public static void ReverseBetweenFirstAndLast<T>(T value, LinkedList<T> list)
     {
-        LinkedListNode<string> firstNode = null;
-        LinkedListNode<string> lastNode = null;
-        var currentNode = list1.First;
+        if (list == null || list.Count < 2)
+        {
+            return;
+        }
+        LinkedListNode<T> firstNode = null;
+        LinkedListNode<T> lastNode = null;
+        var currentNode = list.First;
+
         while (currentNode != null)
         {
-            if (currentNode.Value == value)
+            if (EqualityComparer<T>.Default.Equals(currentNode.Value, value))
             {
                 if (firstNode == null)
                     firstNode = currentNode;
@@ -199,32 +185,30 @@ public class FilesAndCollection
             }
             currentNode = currentNode.Next;
         }
-        if (firstNode != null && lastNode != null && firstNode != lastNode)
+
+        if (firstNode == null || lastNode == null || firstNode == lastNode)
         {
-            var nodesToReverse = new List<string>();
-            currentNode = firstNode.Next;
-            while (currentNode != null && currentNode != lastNode)
-            {
-                nodesToReverse.Add(currentNode.Value);
-                currentNode = currentNode.Next;
-            }
-            currentNode = firstNode.Next;
-            while (currentNode != null && currentNode != lastNode)
-            {
-                var nextNode = currentNode.Next;
-                list1.Remove(currentNode);
-                currentNode = nextNode;
-            }
-            currentNode = firstNode;
-            for (int i = nodesToReverse.Count - 1; i >= 0; i--)
-            {
-                list1.AddAfter(currentNode, nodesToReverse[i]);
-                currentNode = currentNode.Next;
-            }
+            return;
+        }
+        var nodesToReverse = new List<LinkedListNode<T>>();
+        currentNode = firstNode.Next;
+
+        while (currentNode != null && currentNode != lastNode)
+        {
+            nodesToReverse.Add(currentNode);
+            currentNode = currentNode.Next;
+        }
+        var insertAfter = firstNode;
+        for (int i = nodesToReverse.Count - 1; i >= 0; i--)
+        {
+            var node = nodesToReverse[i];
+            list.Remove(node);
+            list.AddAfter(insertAfter, node.Value);
+            insertAfter = insertAfter.Next;
         }
     }
 
-    public override string ToString()
+    public static string PrintList<T>(List<T> list)
     {
         if (list.Count == 0)
             return "Список пуст";
@@ -238,15 +222,15 @@ public class FilesAndCollection
         sb.Append($"{list[i]}] ");
         return sb.ToString();
     }
-    public string PrintNewList()
+    public static string PrintNewList<T>(LinkedList<T> list)
     {
-        if (list1 == null || list1.Count == 0)
+        if (list == null || list.Count == 0)
             return "Список пуст";
-    
+
         var sb = new StringBuilder();
         sb.Append("[");
-    
-        var currentNode = list1.First;
+
+        var currentNode = list.First;
         while (currentNode != null)
         {
             sb.Append(currentNode.Value);
@@ -254,11 +238,11 @@ public class FilesAndCollection
             if (currentNode != null)
                 sb.Append(", ");
         }
-    
+
         sb.Append("]");
         return sb.ToString();
     }
-    public void AnalyzeMovies()
+    public static void AnalyzeMovies(HashSet<string> allMovies, List<HashSet<string>> viewers)
     {
         var watchedByAll = new HashSet<string>(allMovies);
         foreach (var viewerMovies in viewers)
@@ -280,7 +264,7 @@ public class FilesAndCollection
         Console.WriteLine("Фильмы, которые не посмотрел ни один зритель:");
         PrintMovies(watchedByNone);
     }
-    private void PrintMovies(HashSet<string> movies)
+    private static void PrintMovies(HashSet<string> movies)
     {
         if (movies.Count == 0)
         {
@@ -295,7 +279,7 @@ public class FilesAndCollection
         }
     }
     
-    public void GenerateTextFileFOR9()
+    public static void GenerateTextFileFOR9(string filePath)
     {
         Random random = new Random();
         char[] chars =
@@ -316,7 +300,7 @@ public class FilesAndCollection
         f.Close();
     }
     
-    public void ProcessFile()
+    public static void ProcessFile(string filePath)
     {
         string[] words = File.ReadAllText(filePath).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
         HashSet<char> allConsonants = new HashSet<char>();
@@ -327,23 +311,21 @@ public class FilesAndCollection
             foreach (char c in word)
             {
                 if ("бвгджзлмнр".Contains(c))
+                {
                     consonantsInCurrentWord.Add(c);
+                }
             }
-            foreach (char consonant in consonantsInCurrentWord)
-            {
-                if (allConsonants.Contains(consonant))
-                    repeatedConsonants.Add(consonant);
-                else
-                    allConsonants.Add(consonant);
-            }
+            HashSet<char> duplicates = new HashSet<char>(consonantsInCurrentWord);
+            duplicates.IntersectWith(allConsonants);
+            repeatedConsonants.UnionWith(duplicates);
         }
-        List<char> result = new List<char>(repeatedConsonants);
-        result.Sort();
+        List<char> sortedResult = new List<char>(repeatedConsonants);
+        sortedResult.Sort();
         Console.WriteLine("Звонкие согласные, встречающиеся более чем в одном слове:");
-        Console.WriteLine(string.Join(" ", result));
+        Console.WriteLine(string.Join(" ", sortedResult));
     }
     
-    public double CalculateAverageEmployeesPerDepartment()
+    public static double CalculateAverageEmployeesPerDepartment(string filePath)
     {
         var departmentCounts = new Dictionary<string, int>();
         int totalEmployees = 0;
@@ -364,6 +346,26 @@ public class FilesAndCollection
         f.Close();
         return (double)totalEmployees / departmentCounts.Count;
     }
+    
+    
+    public static void Serialize(Toy[] toys, string filePath)
+    {
+        XmlSerializer serializer = new XmlSerializer(typeof(Toy[]));
+        using (StreamWriter writer = new StreamWriter(filePath))
+        {
+            serializer.Serialize(writer, toys);
+        }
+    }
+
+    public static Toy[] Deserialize(string filePath)
+    {
+        XmlSerializer serializer = new XmlSerializer(typeof(Toy[]));
+        using (StreamReader reader = new StreamReader(filePath))
+        {
+            return (Toy[])serializer.Deserialize(reader);
+        }
+    }
 }
     
-    
+
+//5, 6, 7 в 6,7 сделать list<T>, в 5 описать struct игуршки создать массив игрушек и после в xml, а после выполнить самое задание(десериализацию)
