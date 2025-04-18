@@ -2,77 +2,42 @@
 import time
 import threading
 import sys
-import keyboard
 import numpy as np
 from mss import mss
-from Xlib import display
-
-def exiting():
-    sys.exit()
+from pynput import keyboard
+import subprocess
 
 class TriggerBot:
     def __init__(self):
         self.sct = mss()
         self.triggerbot = False
         self.triggerbot_toggle = True
-        self.exit_program = False
         self.toggle_lock = threading.Lock()
-
-        # Получаем разрешение экрана
-        d = display.Display().screen()
-        self.WIDTH, self.HEIGHT = d.width_in_pixels, d.height_in_pixels
         
-        # Зона проверки (5x5 пикселей в центре)
+        # Параметры экрана Steam Deck (1280x800)
+        self.WIDTH, self.HEIGHT = 1280, 800
         self.ZONE = 5
-        self.GRAB_ZONE = (
-            int(self.WIDTH / 2 - self.ZONE),
-            int(self.HEIGHT / 2 - self.ZONE),
-            int(self.WIDTH / 2 + self.ZONE),
-            int(self.HEIGHT / 2 + self.ZONE),
-        )
+        self.GRAB_ZONE = {
+            'left': int(self.WIDTH/2 - self.ZONE),
+            'top': int(self.HEIGHT/2 - self.ZONE),
+            'width': self.ZONE*2,
+            'height': self.ZONE*2
+        }
 
-        # Жестко заданные параметры (аналогично вашему конфигу)
-        self.trigger_hotkey = 'shift'  # 0xA0 - это код левого Shift
+        # Целевой цвет (фиолетовый) и параметры
+        self.R, self.G, self.B = 250, 100, 250
+        self.color_tolerance = 70
         self.base_delay = 0.01
         self.trigger_delay = 40
-        self.color_tolerance = 70
-        self.always_enabled = False
-        self.R, self.G, self.B = (250, 100, 250)  # Фиолетовый цвет
 
-    def cooldown(self):
-        time.sleep(0.1)
-        with self.toggle_lock:
-            self.triggerbot_toggle = True
-            # Звуковые сигналы
-            print("\a", end='')  # Первый beep
-            time.sleep(0.075)
-            print("\a", end='')  # Второй beep (высокий или низкий в зависимости от состояния)
+        # Настройка слушателя клавиш
+        self.listener = keyboard.Listener(
+            on_press=self.on_press,
+            on_release=self.on_release)
+        self.listener.start()
 
-    def search_color(self):
-        img = np.array(self.sct.grab({
-            'left': self.GRAB_ZONE[0],
-            'top': self.GRAB_ZONE[1],
-            'width': self.ZONE * 2,
-            'height': self.ZONE * 2
-        }))
-
-        pmap = np.array(img)
-        pixels = pmap.reshape(-1, 4)
-        color_mask = (
-            (pixels[:, 0] > self.R - self.color_tolerance) & (pixels[:, 0] < self.R + self.color_tolerance) &
-            (pixels[:, 1] > self.G - self.color_tolerance) & (pixels[:, 1] < self.G + self.color_tolerance) &
-            (pixels[:, 2] > self.B - self.color_tolerance) & (pixels[:, 2] < self.B + self.color_tolerance)
-        )
-        matching_pixels = pixels[color_mask]
-        
-        if self.triggerbot and len(matching_pixels) > 0:
-            delay_percentage = self.trigger_delay / 100.0
-            actual_delay = self.base_delay + self.base_delay * delay_percentage
-            time.sleep(actual_delay)
-            keyboard.press_and_release('k')
-
-    def toggle(self):
-        if keyboard.is_pressed(self.trigger_hotkey):
+    def on_press(self, key):
+        if key == keyboard.Key.shift:
             with self.toggle_lock:
                 if self.triggerbot_toggle:
                     self.triggerbot = not self.triggerbot
@@ -80,36 +45,47 @@ class TriggerBot:
                     self.triggerbot_toggle = False
                     threading.Thread(target=self.cooldown).start()
 
-        if keyboard.is_pressed('ctrl+shift+x'):
-            self.exit_program = True
-            exiting()
+    def on_release(self, key):
+        if key == keyboard.Key.shift:
+            with self.toggle_lock:
+                self.triggerbot_toggle = True
 
-    def hold(self):
-        while True:
-            if keyboard.is_pressed(self.trigger_hotkey):
-                self.triggerbot = True
-                self.search_color()
-            else:
-                time.sleep(0.1)
-            
-            if keyboard.is_pressed('ctrl+shift+x'):
-                self.exit_program = True
-                exiting()
+    def cooldown(self):
+        time.sleep(0.1)
+        with self.toggle_lock:
+            self.triggerbot_toggle = True
+
+    def search_color(self):
+        img = np.array(self.sct.grab(self.GRAB_ZONE))
+        pixels = img.reshape(-1, 4)
+        
+        color_mask = (
+            (pixels[:, 0] > self.R - self.color_tolerance) &
+            (pixels[:, 0] < self.R + self.color_tolerance) &
+            (pixels[:, 1] > self.G - self.color_tolerance) &
+            (pixels[:, 1] < self.G + self.color_tolerance) &
+            (pixels[:, 2] > self.B - self.color_tolerance) &
+            (pixels[:, 2] < self.B + self.color_tolerance)
+        )
+        
+        if self.triggerbot and np.any(color_mask):
+            delay = self.base_delay * (1 + self.trigger_delay/100)
+            time.sleep(delay)
+            subprocess.run(['xdotool', 'key', 'k'])
 
     def start(self):
-        print("TriggerBot started")
-        print(f"Hotkey: {self.trigger_hotkey} (hold to activate)")
-        print("Press Ctrl+Shift+X to exit")
+        print("TriggerBot для Steam Deck")
+        print("Удерживайте Shift для активации")
+        print("Нажмите Ctrl+C для выхода")
         
-        while not self.exit_program:
-            if self.always_enabled:
-                self.toggle()
-                self.search_color() if self.triggerbot else time.sleep(0.1)
-            else:
-                self.hold()
+        try:
+            while True:
+                self.search_color()
+                time.sleep(0.01)
+        except KeyboardInterrupt:
+            print("\nВыход...")
+            self.listener.stop()
 
 if __name__ == "__main__":
-    try:
-        TriggerBot().start()
-    except KeyboardInterrupt:
-        exiting()
+    bot = TriggerBot()
+    bot.start()
