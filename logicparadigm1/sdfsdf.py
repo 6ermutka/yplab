@@ -1,91 +1,67 @@
 #!/usr/bin/env python3
 import time
-import threading
-import sys
 import numpy as np
 from mss import mss
-from pynput import keyboard
 import subprocess
+import sys
 
 class TriggerBot:
     def __init__(self):
         self.sct = mss()
-        self.triggerbot = False
-        self.triggerbot_toggle = True
-        self.toggle_lock = threading.Lock()
+        self.active = True  # Всегда активно
+        self.WIDTH, self.HEIGHT = 1280, 800  # Разрешение Steam Deck
+        self.ZONE = 5  # Зона проверки (5x5 пикселей)
         
-        # Параметры экрана Steam Deck (1280x800)
-        self.WIDTH, self.HEIGHT = 1280, 800
-        self.ZONE = 5
         self.GRAB_ZONE = {
             'left': int(self.WIDTH/2 - self.ZONE),
             'top': int(self.HEIGHT/2 - self.ZONE),
             'width': self.ZONE*2,
             'height': self.ZONE*2
         }
+        
+        # Фиолетовый цвет (R, G, B) и допуск
+        self.TARGET_COLOR = (250, 100, 250)
+        self.COLOR_TOLERANCE = 70
+        
+        # Задержки
+        self.BASE_DELAY = 0.01
+        self.TRIGGER_DELAY = 40  # 40%
 
-        # Целевой цвет (фиолетовый) и параметры
-        self.R, self.G, self.B = 250, 100, 250
-        self.color_tolerance = 70
-        self.base_delay = 0.01
-        self.trigger_delay = 40
+    def press_key(self):
+        """Эмулирует нажатие клавиши 'k' через xdotool"""
+        try:
+            subprocess.run(['xdotool', 'key', 'k'], check=True)
+        except:
+            print("Ошибка: xdotool не работает. Нажмите 'k' вручную!")
 
-        # Настройка слушателя клавиш
-        self.listener = keyboard.Listener(
-            on_press=self.on_press,
-            on_release=self.on_release)
-        self.listener.start()
-
-    def on_press(self, key):
-        if key == keyboard.Key.shift:
-            with self.toggle_lock:
-                if self.triggerbot_toggle:
-                    self.triggerbot = not self.triggerbot
-                    print(f"TriggerBot {'ON' if self.triggerbot else 'OFF'}")
-                    self.triggerbot_toggle = False
-                    threading.Thread(target=self.cooldown).start()
-
-    def on_release(self, key):
-        if key == keyboard.Key.shift:
-            with self.toggle_lock:
-                self.triggerbot_toggle = True
-
-    def cooldown(self):
-        time.sleep(0.1)
-        with self.toggle_lock:
-            self.triggerbot_toggle = True
-
-    def search_color(self):
+    def check_color(self):
+        """Проверяет наличие целевого цвета в центре экрана"""
         img = np.array(self.sct.grab(self.GRAB_ZONE))
-        pixels = img.reshape(-1, 4)
+        pixels = img.reshape(-1, 4)[:, :3]  # Берем только RGB (без альфа-канала)
         
-        color_mask = (
-            (pixels[:, 0] > self.R - self.color_tolerance) &
-            (pixels[:, 0] < self.R + self.color_tolerance) &
-            (pixels[:, 1] > self.G - self.color_tolerance) &
-            (pixels[:, 1] < self.G + self.color_tolerance) &
-            (pixels[:, 2] > self.B - self.color_tolerance) &
-            (pixels[:, 2] < self.B + self.color_tolerance)
-        )
+        # Создаем маску для целевого цвета
+        lower = np.array([c - self.COLOR_TOLERANCE for c in self.TARGET_COLOR])
+        upper = np.array([c + self.COLOR_TOLERANCE for c in self.TARGET_COLOR])
+        color_mask = np.all((pixels >= lower) & (pixels <= upper), axis=1)
         
-        if self.triggerbot and np.any(color_mask):
-            delay = self.base_delay * (1 + self.trigger_delay/100)
-            time.sleep(delay)
-            subprocess.run(['xdotool', 'key', 'k'])
+        return np.any(color_mask)
 
-    def start(self):
-        print("TriggerBot для Steam Deck")
-        print("Удерживайте Shift для активации")
+    def run(self):
+        print("TriggerBot запущен для Steam Deck")
+        print(f"Отслеживание цвета {self.TARGET_COLOR} в центре экрана")
         print("Нажмите Ctrl+C для выхода")
         
         try:
             while True:
-                self.search_color()
-                time.sleep(0.01)
+                if self.active and self.check_color():
+                    delay = self.BASE_DELAY * (1 + self.TRIGGER_DELAY/100)
+                    time.sleep(delay)
+                    self.press_key()
+                time.sleep(0.01)  # Небольшая задержка для CPU
+                
         except KeyboardInterrupt:
-            print("\nВыход...")
-            self.listener.stop()
+            print("\nЗавершение работы...")
 
 if __name__ == "__main__":
     bot = TriggerBot()
-    bot.start()
+    bot.run()
