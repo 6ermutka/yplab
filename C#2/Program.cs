@@ -49,7 +49,7 @@ internal class Program
     {
         Console.WriteLine("-----ЗАДАНИЕ 1:-----");
         InputValidator checker = new InputValidator();
-        /*string filepath = checker.GetValidFilePath();
+        string filepath = checker.GetValidFilePath();
         Console.Write("minValue - ");
         int minValue = checker.GetValidWholeNumber();
         Console.Write("maxValue - ");
@@ -96,7 +96,7 @@ internal class Program
         Console.Write("Filepathnew - ");
         string filepathnew2 = checker.GetValidFilePath();
         FilesAndCollection.GenerateUniqueBinaryFile(filepathBIN, filepathnew2, count4);
-        Console.WriteLine($"Результат: Числа переписаны в {filepathnew2} ");*/
+        Console.WriteLine($"Результат: Числа переписаны в {filepathnew2} ");
         
         Console.WriteLine("-----ЗАДАНИЕ 5:-----");
         Toy[] toys = new Toy[]
@@ -112,7 +112,6 @@ internal class Program
         FilesAndCollection.Serialize(toys, filepathXML);
         Console.WriteLine("Массив игрушек успешно сохранен в XML файл.");
         Toy[] deserializedToys = FilesAndCollection.Deserialize(filepathXML);
-        // Выполняем задание: получаем игрушки для 5-летних детей с ценой <= k
         Console.Write("Введите максимальную цену (k): ");
         double k = double.Parse(Console.ReadLine());
         List<string> suitableToys = new List<string>();
@@ -135,8 +134,8 @@ internal class Program
         {
             Console.WriteLine("Нет подходящих игрушек.");
         }
-
-        /*Console.WriteLine("-----ЗАДАНИЕ 6:-----");
+        
+        Console.WriteLine("-----ЗАДАНИЕ 6:-----");
         List<string> userList = new List<string>();
         Console.WriteLine("Введите элементы списка (для завершения введите пустую строку):");
         while (true)
@@ -153,6 +152,7 @@ internal class Program
         FilesAndCollection.RemoveAllOccurrences(valueToRemove, userList);
         Console.WriteLine("После удаления:");
         Console.WriteLine(FilesAndCollection.PrintList(userList));
+
 
         Console.WriteLine("-----ЗАДАНИЕ 7:-----");
         LinkedList<string> userList2 = new LinkedList<string>();
@@ -228,7 +228,7 @@ internal class Program
         Console.WriteLine($"Данные успешно сохранены в файл {filepath}");
         f.Close();
         double N = FilesAndCollection.CalculateAverageEmployeesPerDepartment(filepath);
-        Console.WriteLine(N);*/
+        Console.WriteLine(N);
     }
 }
 ///Users/stepanivanov/Documents/project/test/test.txt

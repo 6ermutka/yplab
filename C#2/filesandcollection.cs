@@ -346,8 +346,6 @@ public class FilesAndCollection
         f.Close();
         return (double)totalEmployees / departmentCounts.Count;
     }
-    
-    
     public static void Serialize(Toy[] toys, string filePath)
     {
         XmlSerializer serializer = new XmlSerializer(typeof(Toy[]));
@@ -356,7 +354,6 @@ public class FilesAndCollection
             serializer.Serialize(writer, toys);
         }
     }
-
     public static Toy[] Deserialize(string filePath)
     {
         XmlSerializer serializer = new XmlSerializer(typeof(Toy[]));
@@ -366,6 +363,3 @@ public class FilesAndCollection
         }
     }
 }
-    
-
-//5, 6, 7 в 6,7 сделать list<T>, в 5 описать struct игуршки создать массив игрушек и после в xml, а после выполнить самое задание(десериализацию)
