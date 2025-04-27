@@ -1,0 +1,38 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Width="600" Height="500"
+        x:Class="Lab9.MainWindow"
+        Title="Лабораторная работа №9">
+        
+    <StackPanel Margin="20" Spacing="10">
+        <TextBlock Text="Введите параметры отрезка" FontSize="16" FontWeight="Bold"/>
+        
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <TextBlock Text="Начало отрезка (X):" Grid.Row="0" Grid.Column="0" Margin="0,0,10,0"/>
+            <TextBox x:Name="txtX" Grid.Row="0" Grid.Column="1"/>
+            <TextBlock Text="Конец отрезка (Y):" Grid.Row="1" Grid.Column="0" Margin="0,0,10,0"/>
+            <TextBox x:Name="txtY" Grid.Row="1" Grid.Column="1"/>
+            <TextBlock Text="Число для проверки (N):" Grid.Row="2" Grid.Column="0" Margin="0,0,10,0"/>
+            <TextBox x:Name="txtN" Grid.Row="2" Grid.Column="1"/>
+        </Grid>
+        <Button Content="Выполнить операции" Click="OnExecuteClick" Margin="0,20,0,0"/>
+        <Separator Margin="0,20"/>
+        <TextBlock Text="Результаты:" FontSize="16" FontWeight="Bold"/>
+        <ScrollViewer MaxHeight="200">
+            <StackPanel x:Name="resultsPanel" Spacing="5"/>
+        </ScrollViewer>
+        <TextBlock x:Name="lblError" Foreground="Red" TextWrapping="Wrap"/>
+    </StackPanel>
+</Window>   
