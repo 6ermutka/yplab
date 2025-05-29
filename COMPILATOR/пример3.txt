@@ -1,0 +1,5 @@
+program UnclosedString;
+begin
+  var ch: char;
+  ch := 'a; { Незакрытая символьная константа }
+end.

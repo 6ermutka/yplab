@@ -1,0 +1,5 @@
+program InvalidSymbol;
+begin
+  var x: integer;
+  x := 10 @ 20;  { Символ '@' недопустим в Pascal }
+end.

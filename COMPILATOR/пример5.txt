@@ -1,0 +1,5 @@
+program InvalidConst;
+begin
+  var x: integer;
+  x := 123abc;  { Буквы в числовой константе }
+end.

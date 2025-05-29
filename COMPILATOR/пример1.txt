@@ -1,0 +1,5 @@
+program MaxIntError;
+begin
+  var x: integer;
+  x := 32768;  { Превышает максимальное значение для Int16 (32767) }
+end.

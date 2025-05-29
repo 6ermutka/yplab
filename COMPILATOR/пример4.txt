@@ -1,0 +1,5 @@
+program EmptyString;
+begin
+  var ch: char;
+  ch := '';  { Пустая символьная константа }
+end.

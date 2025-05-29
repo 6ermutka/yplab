@@ -1,0 +1,5 @@
+program FloatOverflow;
+begin
+  var x: real;
+  x := 1.7e+39;  { Превышает максимальное значение для float (1.7e38) }
+end.
