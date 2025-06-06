@@ -24,7 +24,7 @@
        A0           A0
 
 3. BME280
-      MQ135 |  Arduino UNO
+      BME280 |  Arduino UNO
        VCC          3.3V
        GND	        GND
        SCL          A5
