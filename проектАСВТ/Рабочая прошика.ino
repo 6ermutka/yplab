@@ -1,6 +1,6 @@
 #include <UIPEthernet.h>
 #include <SPI.h>
-#include <GyverBME280.h>  // Или Adafruit_BME280.h, если используете её
+#include <GyverBME280.h> 
 
 #define analogPin A0
 GyverBME280 bme;
