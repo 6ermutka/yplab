@@ -89,10 +89,8 @@ void loop() {
     String encryptedHex = xorEncryptToHex(plainData, xorKey);
     
     if (sendToServer(encryptedHex)) {
-      Serial.println(encryptedHex);
       lastSend = millis();
     } else {
-      Serial.println("Failed to send data");
     }
   }
   
@@ -109,7 +107,6 @@ bool sendToServer(String data) {
       if (client.available()) {
         String response = client.readStringUntil('\n');
         response.trim();
-        Serial.print("Server: ");
         Serial.println(response);
         break;
       }
@@ -148,11 +145,7 @@ void getCriticalValues() {
             criticalTemp = cleanResponse.substring(0, firstComma).toFloat();
             criticalMQ135 = cleanResponse.substring(firstComma + 1, secondComma).toFloat();
             criticalHumidity = cleanResponse.substring(secondComma + 1).toFloat();
-          
-            Serial.print("Critical values updated: ");
             Serial.print("Temp="); Serial.print(criticalTemp);
-            Serial.print(", MQ135="); Serial.print(criticalMQ135);
-            Serial.print(", Hum="); Serial.println(criticalHumidity);
           }
         }
         break;
