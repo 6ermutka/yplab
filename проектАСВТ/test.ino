@@ -1,7 +1,7 @@
 #include "EtherCard.h"
 
 static byte mymac[] = {0x5A, 0x5A, 0x5A, 0x5A, 0x5A, 0x5A }; // MAC Address
-static byte myip[] = {169, 254, 190, 103}; // IP адрес страницы
+static byte myip[] = {169, 254, 190, 103}; // ВОТ тут надо заменить IP на IP который выдал маршутизатор на +1 в конце(допустим у Паши 101 в конце то мы делаем 102 или 110 но не 101)
 byte Ethernet::buffer[1200]; BufferFiller bfill;
 
 int LedPins[] = {2, 3, 4, 5, 6, 7, 8, 9};
