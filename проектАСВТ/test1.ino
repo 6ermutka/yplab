@@ -127,6 +127,7 @@ void getCriticalValues() {
     while (client.connected() && millis() - start < 2000) {
       if (client.available()) {
         String response = client.readStringUntil('\n');
+        Serial.println(response);
         response.trim();
         // Удаляем все нецифровые символы в начале
         int dataStart = 0;
