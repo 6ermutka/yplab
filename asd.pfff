@@ -1,0 +1,460 @@
+
+
+import requests
+import time
+import json
+from datetime import datetime
+from selenium import webdriver
+from selenium.webdriver.firefox.service import Service
+from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.keys import Keys
+import os
+import threading
+
+
+class SteamMonitor:
+    def __init__(self):
+        self.BOT_TOKEN = '8254467296:AAGdY52lthfUJkBf7KVPbR_-a0_fHbKn6Ug'
+        self.CHAT_ID = '894710522'
+
+        # Список предметов для мониторинга
+        self.items = [
+            {
+                'name': 'Autographed Prison Shank',
+                'url': 'https://steamcommunity.com/market/listings/570/Autographed%20Prison%20Shank#',
+                'api_url': 'https://steamcommunity.com/market/itemordershistogram?country=RU&language=english&currency=5&item_nameid=17778413'
+            },
+            {
+                'name': 'Inscribed Magnificent Flame',
+                'url': 'https://steamcommunity.com/market/listings/570/Inscribed%20Magnificent%20Flame',
+                'api_url': 'https://steamcommunity.com/market/itemordershistogram?country=RU&language=english&currency=5&item_nameid=15822742'
+            },
+            {
+                'name': "Emissary's Blade",
+                'url': 'https://steamcommunity.com/market/listings/570/Emissary%27s%20Blade',
+                'api_url': 'https://steamcommunity.com/market/itemordershistogram?country=RU&language=english&currency=5&item_nameid=15186154'
+            },
+            {
+                'name': 'Enchanted Vision',
+                'url': 'https://steamcommunity.com/market/listings/570/Enchanted%20Vision',
+                'api_url': 'https://steamcommunity.com/market/itemordershistogram?country=RU&language=english&currency=5&item_nameid=15809647'
+            },
+            {
+                'name': 'Bow of the Lone Traveler',
+                'url': 'https://steamcommunity.com/market/listings/570/Bow%20of%20the%20Lone%20Traveler',
+                'api_url': 'https://steamcommunity.com/market/itemordershistogram?country=RU&language=english&currency=5&item_nameid=15809652'
+            },
+            {
+                'name': 'Catastrophe',
+                'url': 'https://steamcommunity.com/market/listings/570/Catastrophe',
+                'api_url': 'https://steamcommunity.com/market/itemordershistogram?country=RU&language=english&currency=5&item_nameid=15805332'
+            },
+            {
+                'name': "Red General's Soul Splitter",
+                'url': 'https://steamcommunity.com/market/listings/570/Red%20General%27s%20Soul%20Splitter',
+                'api_url': 'https://steamcommunity.com/market/itemordershistogram?country=RU&language=english&currency=5&item_nameid=15809657'
+            },
+            {
+                'name': 'Autographed White Sentry',
+                'url': 'https://steamcommunity.com/market/listings/570/Autographed%20White%20Sentry',
+                'api_url': 'https://steamcommunity.com/market/itemordershistogram?country=RU&language=english&currency=5&item_nameid=15809654'
+            },
+            {
+                'name': 'Inscribed Staff of the Lunar Tree',
+                'url': 'https://steamcommunity.com/market/listings/570/Inscribed%20Staff%20of%20the%20Lunar%20Tree',
+                'api_url': 'https://steamcommunity.com/market/itemordershistogram?country=RU&language=english&currency=5&item_nameid=15816987'
+            },
+            {
+                'name': 'Autographed Lesser Purifier',
+                'url': 'https://steamcommunity.com/market/listings/570/Autographed%20Lesser%20Purifier',
+                'api_url': 'https://steamcommunity.com/market/itemordershistogram?country=RU&language=english&currency=5&item_nameid=17419510'
+            }
+        ]
+
+        self.previous_data = {}  # Будет хранить предыдущие данные для каждого предмета
+        self.active_orders = {}  # Будет хранить активные ордера: {item_name: {'price': price, 'item_url': url}}
+        self.request_count = 0
+        self.driver = None
+        self.session = requests.Session()
+
+        # Заголовки для запросов к Steam
+        self.headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Accept': '*/*',
+            'Accept-Language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
+            'Referer': 'https://steamcommunity.com/'
+        }
+
+    def setup_selenium(self):
+        """Настройка Selenium WebDriver для Firefox"""
+        print("🦊 Настройка Firefox WebDriver...")
+
+        # Настройки для Firefox
+        firefox_options = Options()
+        # firefox_options.add_argument("--headless")  # Оставляем видимым для авторизации
+        firefox_options.add_argument("--no-sandbox")
+        firefox_options.add_argument("--disable-dev-shm-usage")
+        firefox_options.add_argument("--width=1200")
+        firefox_options.add_argument("--height=800")
+
+        # Добавляем дополнительные опции для стабильности
+        firefox_options.set_preference("dom.webdriver.enabled", False)
+        firefox_options.set_preference("useAutomationExtension", False)
+
+        try:
+            self.driver = webdriver.Firefox(options=firefox_options)
+            self.driver.implicitly_wait(10)
+            print("✅ Firefox WebDriver успешно запущен")
+        except Exception as e:
+            print(f"❌ Ошибка запуска WebDriver: {e}")
+            raise
+
+    def get_initial_data(self):
+        """Получение начальных данных по всем предметам"""
+        print("📊 Получение начальных данных по всем предметам...")
+
+        for item in self.items:
+            try:
+                print(f"🔍 Получаю данные для: {item['name']}")
+
+                response = requests.get(item['api_url'], headers=self.headers, timeout=15)
+                response.raise_for_status()
+
+                data = response.json()
+
+                if (data.get('success') and
+                        data.get('buy_order_graph') and
+                        len(data['buy_order_graph']) > 0):
+
+                    current_data = data['buy_order_graph'][0]
+                    price, quantity, description = current_data
+
+                    # Сохраняем данные для этого предмета
+                    self.previous_data[item['name']] = {
+                        'price': price,
+                        'quantity': quantity,
+                        'description': description
+                    }
+
+                    print(f"✅ {item['name']}: {price} руб., {quantity} шт.")
+
+                else:
+                    print(f"⚠️ Нет данных для: {item['name']}")
+                    self.previous_data[item['name']] = None
+
+            except Exception as e:
+                print(f"❌ Ошибка получения данных для {item['name']}: {e}")
+                self.previous_data[item['name']] = None
+
+            time.sleep(1)  # Пауза между запросами
+
+        print("✅ Начальные данные получены для всех предметов")
+
+    def steam_login_with_qr(self):
+        """Ручная авторизация в Steam - просто ждем перехода на профиль"""
+        print("🔐 Начало авторизации в Steam...")
+
+        try:
+            # Переходим на страницу логина Steam
+            login_url = "https://steamcommunity.com/login/home/"
+            print(f"🌐 Перехожу на: {login_url}")
+            self.driver.get(login_url)
+
+            print("📱 В браузере открыта страница Steam")
+            print("👆 Вручную авторизуйтесь через QR-код или другим способом")
+            print("🎯 После авторизации перейдите на ваш профиль:")
+            print("   https://steamcommunity.com/id/idontknowhyoudied/")
+            print("⏳ Ожидаю успешной авторизации... (до 3 минут)")
+
+            # URL для проверки успешной авторизации
+            success_url = "https://steamcommunity.com/id/idontknowhyoudied/"
+
+            # Ждем перехода на указанный URL в течение 3 минут
+            WebDriverWait(self.driver, 180).until(
+                EC.url_to_be(success_url)
+            )
+
+            print("✅ Авторизация в Steam успешно завершена!")
+            print(f"📄 Текущий URL: {self.driver.current_url}")
+
+            # Даем дополнительное время для установки кук
+            time.sleep(3)
+
+            # Получаем куки из Selenium и передаем их в requests session
+            self._transfer_cookies_to_requests()
+            return True
+
+        except Exception as e:
+            print(f"❌ Ошибка при авторизации: {e}")
+            print(f"⚠️ Текущий URL: {self.driver.current_url}")
+            return False
+
+    def create_buy_order(self, item_name, price, item_url):
+        """Создание ордера на покупку по указанной цене"""
+        print(f"💰 Создаю ордер на покупку {item_name} по цене: {price} руб.")
+
+        try:
+            # Переходим на страницу предмета
+            print(f"🌐 Перехожу на страницу предмета: {item_name}")
+            self.driver.get(item_url)
+            time.sleep(3)
+
+            # Ищем и нажимаем кнопку "Place buy order..."
+            print("🔍 Ищу кнопку 'Place buy order...'")
+            buy_order_button = WebDriverWait(self.driver, 10).until(
+                EC.element_to_be_clickable((By.XPATH, "//a[contains(@class, 'market_noncommodity_buyorder_button')]"))
+            )
+            buy_order_button.click()
+            print("✅ Кнопка 'Place buy order...' найдена и нажата")
+            time.sleep(2)
+
+            # Ждем появления диалогового окна и поля для ввода цены
+            print("🔍 Ожидаю появление диалогового окна...")
+            price_input = WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.ID, "market_buy_commodity_input_price"))
+            )
+            print("✅ Диалоговое окно открыто")
+
+            # Очищаем поле (три разных способа для надежности)
+            print("🧹 Очищаю поле ввода цены...")
+            price_input.clear()  # Способ 1: стандартный clear
+            price_input.send_keys(Keys.CONTROL + "a")  # Способ 2: выделить все
+            price_input.send_keys(Keys.DELETE)  # Способ 3: удалить
+            time.sleep(0.5)
+
+            # Вводим цену
+            price_input.send_keys(str(price))
+            print(f"✅ Введена цена: {price} руб.")
+            time.sleep(1)
+
+            # Ставим галочку согласия
+            print("🔍 Ищу checkbox согласия...")
+            checkbox = WebDriverWait(self.driver, 10).until(
+                EC.element_to_be_clickable((By.ID, "market_buyorder_dialog_accept_ssa"))
+            )
+            if not checkbox.is_selected():
+                checkbox.click()
+                print("✅ Checkbox согласия отмечен")
+            time.sleep(1)
+
+            # Нажимаем кнопку "PLACE ORDER"
+            print("🔍 Ищу кнопку 'PLACE ORDER'...")
+            place_order_button = WebDriverWait(self.driver, 10).until(
+                EC.element_to_be_clickable((By.ID, "market_buyorder_dialog_purchase"))
+            )
+            place_order_button.click()
+            print("✅ Кнопка 'PLACE ORDER' нажата")
+
+            # Ждем завершения операции
+            time.sleep(5)
+
+            # Проверяем успешность создания ордера
+            try:
+                error_elements = self.driver.find_elements(By.CLASS_NAME, "market_buyorder_error")
+                if error_elements:
+                    error_text = error_elements[0].text
+                    print(f"❌ Ошибка при создании ордера: {error_text}")
+                    return False
+            except:
+                pass
+
+            print("✅ Ордер успешно создан!")
+
+            # Ждем 1 минуту перед отменой
+            print("⏰ Жду 1 минуту перед отменой ордера...")
+            time.sleep(60)
+
+            # Отменяем ордер
+            return self.cancel_buy_order(item_name, item_url)
+
+        except Exception as e:
+            print(f"❌ Ошибка при создании ордера: {e}")
+            return False
+
+    def cancel_buy_order(self, item_name, item_url):
+        """Отмена ордера на покупку"""
+        print(f"❌ Отменяю ордер для {item_name}")
+
+        try:
+            # Обновляем страницу
+            print("🔄 Обновляю страницу...")
+            self.driver.refresh()
+            time.sleep(3)
+
+            # Ищем ссылку с CancelMarketBuyOrder
+            print("🔍 Ищу ссылку CancelMarketBuyOrder...")
+            cancel_link = WebDriverWait(self.driver, 10).until(
+                EC.element_to_be_clickable((By.XPATH, "//a[contains(@href, 'CancelMarketBuyOrder')]"))
+            )
+            cancel_link.click()
+            print("✅ Ссылка CancelMarketBuyOrder найдена и нажата")
+
+            # Ждем завершения отмены
+            time.sleep(3)
+
+            # Отправляем уведомление в Telegram
+            message = f"✅ Ордер отменен: {item_name}"
+            self.send_to_telegram(message)
+
+            print("✅ Ордер успешно отменен!")
+            return True
+
+        except Exception as e:
+            print(f"❌ Ошибка при отмене ордера: {e}")
+            return False
+
+    def _transfer_cookies_to_requests(self):
+        """Переносим куки из Selenium в requests session"""
+        print("🔄 Переносим куки в requests session...")
+
+        try:
+            # Получаем все куки из браузера
+            selenium_cookies = self.driver.get_cookies()
+
+            # Создаем словарь кук для requests
+            cookies_dict = {}
+            for cookie in selenium_cookies:
+                cookies_dict[cookie['name']] = cookie['value']
+
+            # Обновляем сессию requests
+            self.session.cookies.update(cookies_dict)
+
+            # Также обновляем заголовки
+            self.session.headers.update(self.headers)
+
+            print(f"✅ Перенесено {len(selenium_cookies)} кук")
+
+        except Exception as e:
+            print(f"❌ Ошибка при переносе кук: {e}")
+
+    def monitor_steam(self):
+        """Мониторинг Steam ордеров для всех предметов"""
+        self.request_count += 1
+
+        print(f'\n📊 Запрос #{self.request_count} в {datetime.now().strftime("%H:%M:%S")}')
+
+        for item in self.items:
+            try:
+                print(f"🔍 Проверяю: {item['name']}")
+
+                # Используем нашу сессию с куками
+                response = self.session.get(item['api_url'], timeout=15)
+                response.raise_for_status()
+
+                data = response.json()
+
+                if (data.get('success') and
+                        data.get('buy_order_graph') and
+                        len(data['buy_order_graph']) > 0):
+
+                    current_data = data['buy_order_graph'][0]
+                    price, quantity, description = current_data
+
+                    print(f'💵 {item["name"]}: {price} руб., {quantity} шт.')
+
+                    # Проверяем, изменились ли данные
+                    previous_item_data = self.previous_data.get(item['name'])
+
+                    if (previous_item_data and
+                            previous_item_data['price'] != price and
+                            item['name'] not in self.active_orders):  # Не создаем новый ордер, если уже есть активный
+
+                        message = (
+                            f"🔄 <b>Обновление ордера</b>\n"
+                            f"📦 Предмет: <b>{item['name']}</b>\n"
+                            f"💵 Цена: <b>{price} руб.</b> (было: {previous_item_data['price']} руб.)\n"
+                            f"🎯 Количество: <b>{quantity}</b>\n"
+                            f"⏰ {datetime.now().strftime('%H:%M:%S')}"
+                        )
+
+                        print('📤 Отправляем в Telegram...')
+                        self.send_to_telegram(message)
+
+                        # Создаем ордер по новой цене
+                        print('🛒 Создаю ордер на покупку...')
+                        if self.create_buy_order(item['name'], price, item['url']):
+                            order_message = f"✅ Ордер на {item['name']} создан по цене {price} руб. (будет отменен через 1 минуту)"
+                            self.send_to_telegram(order_message)
+                        else:
+                            order_message = f"❌ Не удалось создать ордер на {item['name']} по цене {price} руб."
+                            self.send_to_telegram(order_message)
+
+                    # Обновляем предыдущие данные
+                    self.previous_data[item['name']] = {
+                        'price': price,
+                        'quantity': quantity,
+                        'description': description
+                    }
+
+            except Exception as error:
+                print(f'❌ Ошибка при проверке {item["name"]}: {error}')
+
+            time.sleep(1)  # Пауза между проверками предметов
+
+    def send_to_telegram(self, message):
+        """Отправка сообщения в Telegram"""
+        try:
+            url = f'https://api.telegram.org/bot{self.BOT_TOKEN}/sendMessage'
+            payload = {
+                'chat_id': self.CHAT_ID,
+                'text': message,
+                'parse_mode': 'HTML'
+            }
+
+            response = requests.post(url, json=payload, timeout=10)
+            result = response.json()
+
+            if result.get('ok'):
+                print('✅ Сообщение отправлено в Telegram')
+            else:
+                print('❌ Ошибка Telegram:', result)
+
+        except Exception as error:
+            print(f'❌ Ошибка отправки: {error}')
+
+    def close_browser(self):
+        """Закрытие браузера"""
+        if self.driver:
+            print("🔒 Закрываю браузер...")
+            self.driver.quit()
+
+    def run(self):
+        """Запуск мониторинга"""
+        print('🚀 Запуск Steam мониторинга...')
+
+        try:
+            # Сначала получаем начальные данные
+            self.get_initial_data()
+
+            # Потом настраиваем Selenium и авторизуемся
+            self.setup_selenium()
+
+            # Авторизуемся через QR-код
+            if self.steam_login_with_qr():
+                print('✅ Авторизация успешна! Начинаем мониторинг...')
+                print('⏰ Интервал: 5 секунд')
+                print('⏹️ Для остановки: Ctrl+C\n')
+
+                # Первый запуск мониторинга
+                self.monitor_steam()
+
+                # Бесконечный цикл с интервалом
+                while True:
+                    time.sleep(5)
+                    self.monitor_steam()
+            else:
+                print('❌ Не удалось авторизоваться в Steam')
+
+        except KeyboardInterrupt:
+            print('\n⏹️ Мониторинг остановлен')
+        finally:
+            self.close_browser()
+
+
+# Запуск программы
+if __name__ == "__main__":
+    monitor = SteamMonitor()
+    monitor.run()
