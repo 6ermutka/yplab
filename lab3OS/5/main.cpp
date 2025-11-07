@@ -49,16 +49,6 @@ public:
         pthread_mutex_unlock(&row_mutexes[row_number]);
     }
 
-    bool IsRowOccupied(int row_number) {
-        if (row_number < 0 || row_number >= table_size) {
-            return false;
-        }
-        return (occupied_rows[row_number] == 1);
-    }
-
-    int GetTableSize() {
-        return table_size;
-    }
 };
 
 const int TABLE_SIZE = 10;
