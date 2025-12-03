@@ -1,0 +1,10 @@
+num1 = int(input("Введите первое число: "))
+num2 = int(input("Введите второе число: "))
+sum_result = num1 + num2
+difference = num1 - num2
+product = num1 * num2
+division = num1 / num2
+print(f"Сумма: {num1} + {num2} = {sum_result}")
+print(f"Разность: {num1} - {num2} = {difference}")
+print(f"Произведение: {num1} * {num2} = {product}")
+print(f"Деление: {num1} / {num2} = {division}")
