@@ -28,7 +28,7 @@ string materials[] = {"Пластик", "Дерево", "Нефть", "Песо�
 
 void* fun1(void* args){
     int index = *((int*)args);
-    int local_index = index * k; // Каждый поток начинает с своего диапазона
+    int local_index = index * k;
     zapis zayavka;
     int num_requests = rand()%k + 1;
     pthread_mutex_lock(&mutex_data);
@@ -64,7 +64,6 @@ void* fun2(void* args){
         processed++;
         read_index++;
         pthread_mutex_unlock(&mutex_data);
-        sem_post(semaphor_write);
         for (int i = 0; i < 5; i++) {
             if (obchaya_zayavka[i].material == temp.material) {
                 obchaya_zayavka[i].count += temp.count;
@@ -79,9 +78,6 @@ void* fun2(void* args){
 int main() {
     srand(time(NULL));
     pthread_mutex_init(&mutex_data, NULL);
-    sem_unlink("/sem_write");
-    sem_unlink("/sem_read");
-
     // СОЗДАНИЕ ИМЕНОВАННЫХ СЕМАФОРОВ через sem_open():
     // Параметры sem_open():
     // 1. "/sem_write" - имя семафора (должно начинаться со /)
